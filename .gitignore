@@ -1,0 +1,14 @@
+ 
+ # Visual Studio / IDE files
+.vs/
+*.user
+*.slnx
+*.log
+
+# Build outputs
+bin/
+obj/
+
+# Config
+*.config
+*.db
