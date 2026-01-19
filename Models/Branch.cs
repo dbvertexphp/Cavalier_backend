@@ -1,65 +1,80 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Calavier_backend.Models
 {
     public class Branch
     {
+        [Key]
         public int Id { get; set; }
 
+        // ================= COMPANY DETAILS =================
+
         [Required]
-        public required string CompanyName { get; set; }
+        public string CompanyName { get; set; } = null!;
 
         public string? CompanyAlias { get; set; }
 
-        [Required]
-        public required string BranchName { get; set; }
+        // ================= BRANCH DETAILS =================
 
         [Required]
-        public required string BranchCode { get; set; }  // Unique short code, e.g., "DEL", "MUM"
+        public string BranchName { get; set; } = null!;
 
         [Required]
-        public required string Country { get; set; } = "India";
+        public string BranchCode { get; set; } = null!;   // e.g. DEL001
 
         [Required]
-        public required string TimeZone { get; set; } = "Asia/Kolkata";
+        public string Country { get; set; } = "India";
 
         [Required]
-        public required string City { get; set; }
+        public string TimeZone { get; set; } = "Asia/Kolkata";
 
         [Required]
-        public required string Address { get; set; }  // Typo fix: Address (not Adress)
-
-       
+        public string City { get; set; } = null!;
 
         [Required]
-        public required string State { get; set; }
+        public string Address { get; set; } = null!;
+
+        [Required]
+        public string State { get; set; } = null!;
 
         [Required, MaxLength(10)]
-        public required string PostalCode { get; set; }
+        public string PostalCode { get; set; } = null!;
 
         [Required]
-        public required string ContactNo { get; set; }
+        public string ContactNo { get; set; } = null!;
 
         [Required, EmailAddress]
-        public required string Email { get; set; }
+        public string Email { get; set; } = null!;
 
         public string? FaxNumber { get; set; }
 
-        [Required]
-        public required string GstCategory { get; set; }  // ITC, etc.
+        // ================= TAX DETAILS =================
 
-        // New Must-Have Additions
         [Required]
-        public required string GSTIN { get; set; }
+        public string GstCategory { get; set; } = null!;
+
+        [Required, MaxLength(15)]
+        public string GSTIN { get; set; } = null!;
 
         public string? IECCode { get; set; }
 
-        public string? DefaultCustomHouseCode { get; set; }  // e.g., INDEL6 for IGI Airport
+        public string? DefaultCustomHouseCode { get; set; }
+
         [Required]
-        public required string CopyDefaultFrom { get; set; }
+        public string CopyDefaultFrom { get; set; } = null!;
+
+        // ================= STATUS & AUDIT =================
+
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
+
         public string? CreatedBy { get; set; }
+
+        // ================= RELATIONSHIPS =================
+
+        // 🔥 ONE BRANCH → MANY USERS
+        public ICollection<User>? Users { get; set; }
     }
 }

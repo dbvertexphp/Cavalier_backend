@@ -10,6 +10,9 @@ namespace Calavier_backend.Data
         {
         }
 
-        public DbSet<Branch> Branches { get; set; } // ✅ Correct
+        public DbSet<Branch> Branches { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<History> Histories { get; set; }
+
     }
 }
