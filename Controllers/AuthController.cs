@@ -26,37 +26,35 @@ namespace Calavier_backend.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Check user exists
-            var user = await _context.Users
-                .Include(u => u.Branch)
-                .FirstOrDefaultAsync(u => u.Email == dto.Email && u.Password == dto.Password); // plain text
-
-            if (user == null)
-                return Unauthorized(new { message = "Invalid email or password" });
-
-            // ✅ Login success
-            return Ok(new
+            // Check only if Access = "System Administrator"
+            if (dto.Access == "System Administrator")
             {
-                message = "Login successful",
-                user = new
+                var admin = await _context.Admin
+                    .FirstOrDefaultAsync(a => a.Email == dto.Email && a.Password == dto.Password);
+
+                if (admin == null)
+                    return Unauthorized(new { message = "Invalid email or password" });
+
+                return Ok(new
                 {
-                    user.Id,
-                    user.Email,
-                    user.Role,
-                    user.Status,
-                    user.BranchId,
-                    Branch = user.Branch == null ? null : new
+                    message = "Admin login successful",
+                    admin = new
                     {
-                        user.Branch.Id,
-                        user.Branch.BranchName,
-                        user.Branch.BranchCode,
-                        user.Branch.City,
-                        user.Branch.State,
-                        user.Branch.Country
+                        admin.Id,
+                        admin.Name,
+                        admin.Email,
+                        admin.PhoneNumber
                     }
-                }
-            });
+                });
+            }
+
+            return Unauthorized(new { message = "Access denied. Only System Administrator can login." });
         }
+
+
+
+
+
         [HttpPost("verify-branch")]
         public async Task<IActionResult> VerifyBranch([FromBody] BranchVerifyDto dto)
         {
@@ -92,10 +90,6 @@ namespace Calavier_backend.Controllers
     // ===========================
     // DTO for login
     // ===========================
-    public class LoginDto
-    {
-        public string? Email { get; set; }
-        public string? Password { get; set; }
-    }
+    
 
 }
