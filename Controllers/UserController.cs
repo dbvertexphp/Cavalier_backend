@@ -207,7 +207,9 @@ namespace Calavier_backend.Controllers
                 {
                     u.Id,
                     u.Email,
+                    u.Password,
                     u.Role,
+                    u.UserType,
                     u.BranchId,
                     Branch = u.Branch == null ? null : new
                     {
@@ -216,14 +218,29 @@ namespace Calavier_backend.Controllers
                         u.Branch.BranchCode,
                         u.Branch.City,
                         u.Branch.State,
-                        u.Branch.Country
+                        u.Branch.Country,
+                        u.Branch.Address,
+                        u.Branch.ContactNo
                     },
-                    u.Status
+                    u.Status,
+                    u.ProfilePicture,
+                    u.Telephone,
+                    u.Mobile,
+                    u.ProfileSelect,
+                    u.FieldVisit,
+                    u.Signature,
+                    u.AlwaysBccMyself,
+                    u.MfaRegister,
+                    u.IpAddress,
+                    u.Department,
+                    u.DOB,
+                    u.LicenseType
                 })
                 .ToListAsync();
 
             return Ok(users);
         }
+
 
     }
 }
