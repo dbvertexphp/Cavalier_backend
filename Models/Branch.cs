@@ -6,6 +6,7 @@ namespace Calavier_backend.Models
     public class Branch
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // Yeh line add karein
         public int Id { get; set; }
 
         // ================= COMPANY DETAILS =================

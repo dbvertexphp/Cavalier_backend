@@ -2,7 +2,8 @@
 using Calavier_backend.Models;
 using Calavier_backend.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
+using Calavier_backend.DTO;
+
 namespace Calavier_backend.Controllers
 {
     [ApiController]
@@ -11,236 +12,161 @@ namespace Calavier_backend.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-
         public UserController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // REGISTER USER
+        // --- 1. GET ALL USERS ---
+        [HttpGet("list")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _context.Users.ToListAsync();
+            return Ok(users);
+        }
+
+        // --- 2. GET USER BY ID ---
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetByUserId(int id)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null) return NotFound(new { message = $"User with ID {id} not found." });
+            return Ok(user);
+        }
+
+        // --- 3. REGISTER USER ---
         [HttpPost("register")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Register([FromForm] UserRegisterDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
-            if (existingUser != null)
-                return BadRequest(new { message = "Email already exists" });
+            if (existingUser != null) return BadRequest(new { message = "Email already exists" });
 
-            // 🔥 PROFILE PICTURE SAVE
             string? imagePath = null;
-
-            if (dto.ProfilePicture != null)
+            if (dto.Photo != null)
             {
-                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/profiles");
-
-                if (!Directory.Exists(uploadPath))
-                    Directory.CreateDirectory(uploadPath);
-
-                var fileName = Guid.NewGuid() + Path.GetExtension(dto.ProfilePicture.FileName);
+                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+                if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
+                var fileName = Guid.NewGuid() + Path.GetExtension(dto.Photo.FileName);
                 var fullPath = Path.Combine(uploadPath, fileName);
-
-                using (var stream = new FileStream(fullPath, FileMode.Create))
-                {
-                    await dto.ProfilePicture.CopyToAsync(stream);
-                }
-
-                imagePath = "/uploads/profiles/" + fileName;
+                using (var stream = new FileStream(fullPath, FileMode.Create)) { await dto.Photo.CopyToAsync(stream); }
+                imagePath = "/uploads/" + fileName;
             }
 
             var user = new User
             {
+                EmpCode = dto.EmpCode,
+                FirstName = dto.FirstName,
+                MiddleName = dto.MiddleName,
+                LastName = dto.LastName,
                 Email = dto.Email,
                 Password = dto.Password,
-                Role = dto.Role,
-                BranchId = dto.BranchId,
-                LicenseType = dto.LicenseType,
-                Country = dto.Country,
                 DOB = dto.DOB,
+                DateOfJoining = dto.DateOfJoining,
+                CTC_Monthly = dto.CTC_Monthly,
+                Designation = dto.Designation,
+                PAN_No = dto.PAN_No,
+                AadhaarNo = dto.AadhaarNo,
+                ContactPersonal = dto.Mobile,
+                BranchId = dto.BranchId,
+                PhotoPath = imagePath,
+                Status = true,
+
+                // --- Mapping the 16 New Fields ---
+                RoleId = dto.RoleId,
+                LicenceType = dto.LicenceType,
+                Country = dto.Country,
                 Department = dto.Department,
                 Gender = dto.Gender,
                 UserType = dto.UserType,
                 ReportTo = dto.ReportTo,
-
-                MfaRegister = dto.MfaRegister ?? false,
-                Status = dto.Status ?? true,
-                IpAddress = dto.IpAddress,
+                MfaRegistration = dto.MfaRegistration,
+                IPAdress = dto.IPAdress,
+                ProfilePicture = dto.ProfilePicture,
                 Telephone = dto.Telephone,
                 Mobile = dto.Mobile,
+                ProfileSelect = dto.ProfileSelect,
+                FieldVisit = dto.FieldVisit,
+                Signature = dto.Signature,
+                AlwaysBccmyself = dto.AlwaysBccmyself,
 
-                ProfileSelect = string.IsNullOrEmpty(dto.ProfileSelect)
-         ? new List<string>()
-         : dto.ProfileSelect.Split(',').ToList(),
-
-                FieldVisit = dto.FieldVisit ?? false,
-                Signature = dto.Signature ?? false,
-                AlwaysBccMyself = dto.AlwaysBccMyself ?? false,
-
-                ProfilePicture = imagePath
+                // Legacy fields
+                TenthYear = dto.TenthYear,
+                TwelfthYear = dto.TwelfthYear,
+                GraduationYear = dto.GraduationYear,
+                PostGraduationYear = dto.PostGraduationYear,
+                BloodGroup = dto.BloodGroup,
+                SalaryAccountNo = dto.SalaryAccountNo,
+                MaritalStatus = dto.MaritalStatus,
+                EmergencyName = dto.EmergencyName,
+                EmergencyRelation = dto.EmergencyRelation,
+                EmergencyContactNo = dto.EmergencyContactNo,
+                SourceOfSelection = dto.SourceOfSelection
             };
-
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-            string branchName = "N/A";
-            if (user.BranchId.HasValue)
-            {
-                branchName = await _context.Branches
-                    .Where(b => b.Id == user.BranchId.Value)
-                    .Select(b => b.BranchName)
-                    .FirstOrDefaultAsync() ?? "N/A";
-            }
-
-            var registerHistory = new History
-            {
-                UserId = user.Id,
-                BranchName = "1",
-                Action = "USER_REGISTER",
-                Remark = $"User {user.Email} registered"
-            };
-
-            await _context.Histories.AddAsync(registerHistory);
-            await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                message = "User registered successfully",
-                user
-            });
+            return Ok(new { message = "User registered successfully", userId = user.Id });
         }
+
+        // --- 4. UPDATE USER ---
         [HttpPut("update")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Update([FromForm] UserUpdateDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var user = await _context.Users.FindAsync(dto.Id);
-            if (user == null)
-                return NotFound(new { message = "User not found" });
+            if (user == null) return NotFound(new { message = "User not found" });
 
-            // ✅ Update fields if provided
-            if (!string.IsNullOrEmpty(dto.Email)) user.Email = dto.Email;
-            if (!string.IsNullOrEmpty(dto.Password)) user.Password = dto.Password;
-            if (!string.IsNullOrEmpty(dto.Role)) user.Role = dto.Role;
-            if (dto.BranchId.HasValue) user.BranchId = dto.BranchId.Value;
-            if (!string.IsNullOrEmpty(dto.LicenseType)) user.LicenseType = dto.LicenseType;
-            if (!string.IsNullOrEmpty(dto.Country)) user.Country = dto.Country;
-            if (dto.DOB.HasValue) user.DOB = dto.DOB.Value;
-            if (!string.IsNullOrEmpty(dto.Department)) user.Department = dto.Department;
-            if (!string.IsNullOrEmpty(dto.Gender)) user.Gender = dto.Gender;
-            if (!string.IsNullOrEmpty(dto.UserType)) user.UserType = dto.UserType;
-            if (!string.IsNullOrEmpty(dto.ReportTo)) user.ReportTo = dto.ReportTo;
+            user.EmpCode = dto.EmpCode ?? user.EmpCode;
+            user.FirstName = dto.FirstName ?? user.FirstName;
+            user.LastName = dto.LastName ?? user.LastName;
+            user.Email = dto.Email ?? user.Email;
+            user.Designation = dto.Designation ?? user.Designation;
+            user.BranchId = dto.BranchId;
 
-            if (dto.MfaRegister.HasValue) user.MfaRegister = dto.MfaRegister.Value;
-            if (dto.Status.HasValue) user.Status = dto.Status.Value;
-            if (!string.IsNullOrEmpty(dto.IpAddress)) user.IpAddress = dto.IpAddress;
-            if (!string.IsNullOrEmpty(dto.Telephone)) user.Telephone = dto.Telephone;
-            if (!string.IsNullOrEmpty(dto.Mobile)) user.Mobile = dto.Mobile;
-            if (dto.FieldVisit.HasValue) user.FieldVisit = dto.FieldVisit.Value;
-            if (dto.Signature.HasValue) user.Signature = dto.Signature.Value;
-            if (dto.AlwaysBccMyself.HasValue) user.AlwaysBccMyself = dto.AlwaysBccMyself.Value;
+            // --- Update the 16 New Fields ---
+            user.RoleId = dto.RoleId ?? user.RoleId;
+            user.LicenceType = dto.LicenceType ?? user.LicenceType;
+            user.Country = dto.Country ?? user.Country;
+            user.Department = dto.Department ?? user.Department;
+            user.Gender = dto.Gender ?? user.Gender;
+            user.UserType = dto.UserType ?? user.UserType;
+            user.ReportTo = dto.ReportTo ?? user.ReportTo;
+            user.MfaRegistration = dto.MfaRegistration;
+            user.IPAdress = dto.IPAdress ?? user.IPAdress;
+            user.ProfilePicture = dto.ProfilePicture ?? user.ProfilePicture;
+            user.Telephone = dto.Telephone ?? user.Telephone;
+            user.Mobile = dto.Mobile ?? user.Mobile;
+            user.ProfileSelect = dto.ProfileSelect ?? user.ProfileSelect;
+            user.FieldVisit = dto.FieldVisit;
+            user.Signature = dto.Signature ?? user.Signature;
+            user.AlwaysBccmyself = dto.AlwaysBccmyself;
 
-            // 🔥 Update ProfileSelect if provided
-            if (!string.IsNullOrEmpty(dto.ProfileSelect))
-                user.ProfileSelect = dto.ProfileSelect.Split(',').ToList();
-
-            // 🔥 Update ProfilePicture if a new file is uploaded
-            if (dto.ProfilePicture != null)
+            if (dto.Photo != null)
             {
-                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/profiles");
-                if (!Directory.Exists(uploadPath))
-                    Directory.CreateDirectory(uploadPath);
-
-                // Delete old picture if exists
-                if (!string.IsNullOrEmpty(user.ProfilePicture))
-                {
-                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.ProfilePicture.TrimStart('/'));
-                    if (System.IO.File.Exists(oldPath))
-                        System.IO.File.Delete(oldPath);
-                }
-
-                var fileName = Guid.NewGuid() + Path.GetExtension(dto.ProfilePicture.FileName);
+                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+                var fileName = Guid.NewGuid() + Path.GetExtension(dto.Photo.FileName);
                 var fullPath = Path.Combine(uploadPath, fileName);
-
-                using (var stream = new FileStream(fullPath, FileMode.Create))
-                {
-                    await dto.ProfilePicture.CopyToAsync(stream);
-                }
-
-                user.ProfilePicture = "/uploads/profiles/" + fileName;
+                using (var stream = new FileStream(fullPath, FileMode.Create)) { await dto.Photo.CopyToAsync(stream); }
+                user.PhotoPath = "/uploads/" + fileName;
             }
 
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
-            string branchName = "N/A";
-            if (user.BranchId.HasValue)
-            {
-                branchName = await _context.Branches
-                    .Where(b => b.Id == user.BranchId.Value)
-                    .Select(b => b.BranchName)
-                    .FirstOrDefaultAsync() ?? "N/A";
-            }
-
-            var updateHistory = new History
-            {
-                UserId = user.Id,
-                BranchName = branchName,
-                Action = "USER_UPDATE",
-                Remark = "User details updated"
-            };
-
-            await _context.Histories.AddAsync(updateHistory);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "User updated successfully", user });
+            return Ok(new { message = "User updated successfully" });
         }
 
-        [HttpGet("getall")]
-        public async Task<IActionResult> GetAllUsers()
+        // --- 5. DELETE USER ---
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var users = await _context.Users
-                .Include(u => u.Branch)
-                .Select(u => new
-                {
-                    u.Id,
-                    u.Email,
-                    u.Password,
-                    u.Role,
-                    u.UserType,
-                    u.BranchId,
-                    Branch = u.Branch == null ? null : new
-                    {
-                        u.Branch.Id,
-                        u.Branch.BranchName,
-                        u.Branch.BranchCode,
-                        u.Branch.City,
-                        u.Branch.State,
-                        u.Branch.Country,
-                        u.Branch.Address,
-                        u.Branch.ContactNo
-                    },
-                    u.Status,
-                    u.ProfilePicture,
-                    u.Telephone,
-                    u.Mobile,
-                    u.ProfileSelect,
-                    u.FieldVisit,
-                    u.Signature,
-                    u.AlwaysBccMyself,
-                    u.MfaRegister,
-                    u.IpAddress,
-                    u.Department,
-                    u.DOB,
-                    u.LicenseType
-                })
-                .ToListAsync();
-
-            return Ok(users);
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound(new { message = "User not found" });
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "User deleted successfully" });
         }
-
-
     }
 }

@@ -1,13 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-public class LoginDto
+﻿namespace Calavier_backend.DTO
 {
-    [Required]
-    public string Email { get; set; }
+    public class LoginDto
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
 
-    [Required]
-    public string Password { get; set; }
-
-    [Required] // ✅ Ab Swagger me bhi dikhega
-    public string Access { get; set; }
+        // Iska naam 'SystemType' rakhein kyunki Controller yahi dhoond raha hai
+        public string SystemType { get; set; } = "Admin";
+    }
 }

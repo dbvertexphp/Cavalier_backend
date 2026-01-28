@@ -4,6 +4,7 @@ using Calavier_backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Calavier_backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260122111007_UpdateUserTableWithNewFields")]
+    partial class UpdateUserTableWithNewFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -183,23 +186,11 @@ namespace Calavier_backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AadhaarNo")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool?>("AlwaysBccMyself")
                         .HasColumnType("bit");
 
-                    b.Property<string>("BloodGroup")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int?>("BranchId")
                         .HasColumnType("int");
-
-                    b.Property<string>("CTC_Monthly")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ContactPersonal")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Country")
                         .HasColumnType("nvarchar(max)");
@@ -207,91 +198,31 @@ namespace Calavier_backend.Migrations
                     b.Property<DateTime?>("DOB")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("DateOfJoining")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DateOfLeft")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Department")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Designation")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("EmergencyContactName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmergencyContactNo")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmergencyRelation")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmpCode")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool?>("FieldVisit")
                         .HasColumnType("bit");
-
-                    b.Property<string>("FirstName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FunctionalArea")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Gender")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("GraduationYear")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool?>("InvitationLetterSent")
-                        .HasColumnType("bit");
-
                     b.Property<string>("IpAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LicenseType")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Location")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MaritalStatus")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool?>("MfaRegister")
                         .HasColumnType("bit");
-
-                    b.Property<string>("MiddleName")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Mobile")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PAN_No")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Password")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PermanentAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhotoPath")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PostGraduationYear")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PresentAddress")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProfilePicture")
@@ -306,17 +237,8 @@ namespace Calavier_backend.Migrations
                     b.Property<string>("Role")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SalaryAccountNo")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool?>("Signature")
                         .HasColumnType("bit");
-
-                    b.Property<bool?>("SimIssued")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SourceOfSelection")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("Status")
                         .HasColumnType("bit");
@@ -324,16 +246,7 @@ namespace Calavier_backend.Migrations
                     b.Property<string>("Telephone")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TenthYear")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TwelfthYear")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("UserType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("VaccinationCertificatePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");

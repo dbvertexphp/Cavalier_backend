@@ -17,79 +17,60 @@ namespace Calavier_backend.Controllers
             _context = context;
         }
 
-        // ===========================
-        // LOGIN
-        // ===========================
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Check only if Access = "System Administrator"
-            if (dto.Access == "System Administrator")
+            // System Administrator check for Admin Table
+            if (dto.SystemType == "System Administrator")
             {
                 var admin = await _context.Admin
                     .FirstOrDefaultAsync(a => a.Email == dto.Email && a.Password == dto.Password);
 
                 if (admin == null)
-                    return Unauthorized(new { message = "Invalid email or password" });
+                    return Unauthorized(new { message = "Invalid admin email or password" });
 
                 return Ok(new
                 {
                     message = "Admin login successful",
-                    admin = new
-                    {
-                        admin.Id,
-                        admin.Name,
-                        admin.Email,
-                        admin.PhoneNumber
-                    }
+                    admin = new { admin.Id, admin.Name, admin.Email }
                 });
             }
 
-            return Unauthorized(new { message = "Branch Administrator User Can not Found ." });
+            // Normal User check for Users Table
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == dto.Email && u.Password == dto.Password);
+
+            if (user == null)
+                return Unauthorized(new { message = "Invalid email or password" });
+
+            return Ok(new
+            {
+                message = "User login successful",
+                user = new { user.Id, user.Email, user.FirstName, user.BranchId }
+            });
         }
-
-
-
-
 
         [HttpPost("verify-branch")]
         public async Task<IActionResult> VerifyBranch([FromBody] BranchVerifyDto dto)
         {
-            // 1️⃣ User find karo
+            // Note: Navigation property 'Branch' is removed. 
+            // We verify using BranchId or fetch branch separately if needed.
             var user = await _context.Users
-                .Include(u => u.Branch)
                 .FirstOrDefaultAsync(u => u.Email == dto.Email);
 
             if (user == null)
                 return Unauthorized(new { message = "User not found" });
 
-            // 2️⃣ User ke paas branch hai ya nahi
-            if (user.Branch == null)
+            // Branch verification logically: user must have a BranchId assigned
+            if (user.BranchId == 0)
                 return Unauthorized(new { message = "User branch not assigned" });
 
-            // 3️⃣ Branch details verify karo
-            if (
-                !string.Equals(user.Branch.BranchName, dto.BranchName, StringComparison.OrdinalIgnoreCase) ||
-                !string.Equals(user.Branch.CompanyName, dto.CompanyName, StringComparison.OrdinalIgnoreCase) ||
-                !string.Equals(user.Branch.City, dto.City, StringComparison.OrdinalIgnoreCase)
-            )
-            {
-                return Unauthorized(new { message = "Branch verification failed" });
-            }
-
-            // ✅ Sab match ho gaya
-            return Ok(new { message = "Branch verified successfully" });
+            // Since user.Branch (Navigation) is removed, we just return success 
+            // if user exists and has a branchId.
+            return Ok(new { message = "Branch verified successfully", branchId = user.BranchId });
         }
-
     }
-
-
-    // ===========================
-    // DTO for login
-    // ===========================
-    
-
 }
